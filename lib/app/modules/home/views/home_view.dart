@@ -270,8 +270,10 @@ class HomeView extends GetView<HomeController> {
                             Surah surah = snapshot.data![index];
                             return ListTile(
                               onTap: () {
-                                Get.toNamed(Routes.DETAIL_SUURAH,
-                                    arguments: surah);
+                                Get.toNamed(Routes.DETAIL_SUURAH, arguments: {
+                                  "name": surah.name!.transliteration!.id,
+                                  "number": surah.number!,
+                                });
                               },
                               leading: Obx(
                                 () => Container(
@@ -380,13 +382,13 @@ class HomeView extends GetView<HomeController> {
                           builder: (context, snapshot) {
                             if (snapshot.connectionState ==
                                 ConnectionState.waiting) {
-                              return Center(
+                              return const Center(
                                 child: CircularProgressIndicator(),
                               );
                             }
 
                             if (snapshot.data?.length == 0) {
-                              return Center(
+                              return const Center(
                                 child: Text("Bookmark tidak tersedia"),
                               );
                             }
@@ -397,11 +399,20 @@ class HomeView extends GetView<HomeController> {
                                 Map<String, dynamic> data =
                                     snapshot.data![index];
                                 return ListTile(
-                                  onTap: () {},
+                                  onTap: () {
+                                    Get.toNamed(Routes.DETAIL_SUURAH,
+                                        arguments: {
+                                          "name": data["surah"]
+                                              .toString()
+                                              .replaceAll("+", "'"),
+                                          "number": data["number_surah"],
+                                          "bookmark": data,
+                                        });
+                                  },
                                   leading: Container(
                                     height: 40,
                                     width: 40,
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                       image: DecorationImage(
                                         image: AssetImage(
                                           "assets/images/list.png",

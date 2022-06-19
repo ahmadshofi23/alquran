@@ -9,92 +9,103 @@ import '../../../data/models/detail_surah.dart' as detail;
 import '../controllers/detail_suurah_controller.dart';
 
 class DetailSuurahView extends GetView<DetailSuurahController> {
-  final Surah surah = Get.arguments;
+  // final Surah surah = Get.arguments;
   final homeController = Get.find<HomeController>();
+  Map<String, dynamic>? bookmark;
   @override
   Widget build(BuildContext context) {
+    if (Get.arguments["bookmark"] != null) {
+      bookmark = Get.arguments["bookmark"];
+      print(bookmark);
+    }
     return Scaffold(
       appBar: AppBar(
-        title: Text('SURAH ${surah.name!.transliteration!.id!.toUpperCase()}'),
+        title: Text('SURAH ${Get.arguments["name"]}'),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          GestureDetector(
-            onTap: (() => Get.defaultDialog(
-                  backgroundColor: Get.isDarkMode
-                      ? appLightPurple.withOpacity(0.8)
-                      : appWhite,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                  title: "TAFSIR ${surah.name!.transliteration!.id}",
-                  titleStyle: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  content: Container(
-                    child: Text(
-                      "${surah.tafsir!.id} ?? 'Tidak ada tafsir pada surah ini'",
-                      textAlign: TextAlign.justify,
+      body: FutureBuilder<detail.DetailSurah>(
+        future: controller.getDetailSurah(Get.arguments["number"].toString()),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (!snapshot.hasData) {
+            return const Center(
+              child: Text("Tidak ada data..."),
+            );
+          }
+
+          detail.DetailSurah surah = snapshot.data!;
+
+          return ListView(
+            padding: EdgeInsets.all(20),
+            children: [
+              GestureDetector(
+                onTap: (() => Get.defaultDialog(
+                      backgroundColor: Get.isDarkMode
+                          ? appLightPurple.withOpacity(0.8)
+                          : appWhite,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 10),
+                      title: "TAFSIR ${surah.name!.transliteration!.id}",
+                      titleStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      content: Container(
+                        child: Text(
+                          "${surah.tafsir!.id} ?? 'Tidak ada tafsir pada surah ini'",
+                          textAlign: TextAlign.justify,
+                        ),
+                      ),
+                    )),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      colors: [
+                        appLightPurple,
+                        appPupleDark,
+                      ],
                     ),
                   ),
-                )),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  colors: [
-                    appLightPurple,
-                    appPupleDark,
-                  ],
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Text(
+                          "${surah.name!.transliteration!.id!.toUpperCase()}",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: appWhite,
+                          ),
+                        ),
+                        Text(
+                          "{${surah.name!.translation!.id}}",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: appWhite,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          "${surah.numberOfVerses} Ayat | ${surah.revelation!.id}",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: appWhite,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Text(
-                      "${surah.name!.transliteration!.id!.toUpperCase()}",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: appWhite,
-                      ),
-                    ),
-                    Text(
-                      "{${surah.name!.translation!.id}}",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: appWhite,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      "${surah.numberOfVerses} Ayat | ${surah.revelation!.id}",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: appWhite,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          FutureBuilder<detail.DetailSurah>(
-            future: controller.getDetailSurah(surah.number.toString()),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (!snapshot.hasData) {
-                return const Center(
-                  child: Text("Tidak ada data..."),
-                );
-              }
-              return ListView.builder(
+              const SizedBox(height: 20),
+              ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: snapshot.data?.verses?.length ?? 0,
@@ -238,10 +249,10 @@ class DetailSuurahView extends GetView<DetailSuurahController> {
                     ],
                   );
                 },
-              );
-            },
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
