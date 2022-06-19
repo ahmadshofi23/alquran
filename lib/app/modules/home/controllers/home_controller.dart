@@ -1,10 +1,12 @@
 import 'dart:convert';
 
+import 'package:alquran/app/data/db/bookmark.dart';
 import 'package:alquran/app/data/models/juz.dart';
 import 'package:alquran/app/data/models/surah.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:sqflite/sqflite.dart';
 
 import '../../../constant/color.dart';
 import '../../../data/models/detail_surah.dart';
@@ -15,6 +17,35 @@ class HomeController extends GetxController {
 
   //list untuk mengambil surah apa saja yang ada dalam satu jus
   List<Surah> allSurah = [];
+  DatabaseManager database = DatabaseManager.instance;
+
+  Future<Map<String, dynamic>?> getLastRead() async {
+    Database db = await database.db;
+    List<Map<String, dynamic>> dataLastRead =
+        await db.query("bookmark", where: "last_read = 1");
+
+    if (dataLastRead.isEmpty) {
+      //tidak ada data
+      return null;
+    } else {
+      return dataLastRead.first;
+    }
+  }
+
+  void deleteBookmark(int id) async {
+    Database db = await database.db;
+    db.delete("bookmark", where: "id = $id");
+    update();
+    Get.snackbar("Success", "Berhasil hapus bookmark", colorText: appWhite);
+  }
+
+  Future<List<Map<String, dynamic>>> getBookmark() async {
+    Database db = await database.db;
+    List<Map<String, dynamic>> allBookmarks =
+        await db.query("bookmark", where: "last_read = 0");
+    return allBookmarks;
+  }
+
   void changeThemeMode() async {
     final box = GetStorage();
 
@@ -24,8 +55,10 @@ class HomeController extends GetxController {
     if (Get.isDarkMode) {
       //dark -> light
       box.remove("themeDark");
+      update();
     } else {
       box.write("themeDark", true);
+      update();
     }
   }
 
@@ -61,14 +94,6 @@ class HomeController extends GetxController {
               "ayat": ayat,
             });
           } else {
-            // print("=======");
-            // print("Berhasil memasukkan Juz $juz");
-            // print("START : ");
-            // print((penampungAyat[0]["ayat"] as Verse).number!.inSurah);
-            // print("END :");
-            // print((penampungAyat[penampungAyat.length - 1]["ayat"] as Verse)
-            //     .number!
-            //     .inSurah);
             allJuz.add({
               "juz": juz,
               "start": penampungAyat[0],
@@ -85,14 +110,7 @@ class HomeController extends GetxController {
         });
       }
     }
-    // print("=======");
-    // print("Berhasil memasukkan Juz $juz");
-    // print("START : ");
-    // print((penampungAyat[0]["ayat"] as Verse).number!.inSurah);
-    // print("END :");
-    // print((penampungAyat[penampungAyat.length - 1]["ayat"] as Verse)
-    //     .number!
-    //     .inSurah);
+
     allJuz.add({
       "juz": juz,
       "start": penampungAyat[0],
@@ -101,19 +119,5 @@ class HomeController extends GetxController {
     });
 
     return allJuz;
-
-    // List<Juz> allJuz = [];
-    // for (int i = 1; i <= 30; i++) {
-    //   Uri url = Uri.parse("https://api.quran.sutanlab.id/juz/$i");
-    //   var res = await http.get(url);
-    //   Map<String, dynamic> data =
-    //       (json.decode(res.body) as Map<String, dynamic>)["data"];
-
-    //   Juz juz = Juz.fromJson(data);
-    //   allJuz.add(juz);
-    // }
-
-    // // print(data);
-    // return allJuz;
   }
 }

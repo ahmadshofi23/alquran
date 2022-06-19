@@ -1,5 +1,6 @@
 import 'package:alquran/app/constant/color.dart';
 import 'package:alquran/app/data/models/surah.dart';
+import 'package:alquran/app/modules/home/controllers/home_controller.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -8,9 +9,10 @@ import '../../../data/models/detail_surah.dart' as detail;
 import '../controllers/detail_suurah_controller.dart';
 
 class DetailSuurahView extends GetView<DetailSuurahController> {
+  final Surah surah = Get.arguments;
+  final homeController = Get.find<HomeController>();
   @override
   Widget build(BuildContext context) {
-    final Surah surah = Get.arguments;
     return Scaffold(
       appBar: AppBar(
         title: Text('SURAH ${surah.name!.transliteration!.id!.toUpperCase()}'),
@@ -132,7 +134,41 @@ class DetailSuurahView extends GetView<DetailSuurahController> {
                                 builder: (c) => Row(
                                   children: [
                                     IconButton(
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        Get.defaultDialog(
+                                          title: "BOOKMARK",
+                                          middleText: "Pilih jenis bookmark",
+                                          actions: [
+                                            ElevatedButton(
+                                              onPressed: () async {
+                                                await c.addBookmark(
+                                                    true,
+                                                    snapshot.data!,
+                                                    ayat!,
+                                                    index);
+                                                homeController.update();
+                                              },
+                                              child: const Text("LAST READ"),
+                                              style: ElevatedButton.styleFrom(
+                                                primary: appPurple,
+                                              ),
+                                            ),
+                                            ElevatedButton(
+                                              onPressed: () {
+                                                c.addBookmark(
+                                                    false,
+                                                    snapshot.data!,
+                                                    ayat!,
+                                                    index);
+                                              },
+                                              child: const Text("BOOKMARK"),
+                                              style: ElevatedButton.styleFrom(
+                                                primary: appPurple,
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
                                       icon: const Icon(
                                           Icons.bookmark_add_outlined),
                                     ),
@@ -182,8 +218,8 @@ class DetailSuurahView extends GetView<DetailSuurahController> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Text(
-                          "${ayat!.text?.arab}",
-                          textAlign: TextAlign.right,
+                          "${ayat!.text!.arab}",
+                          textAlign: TextAlign.end,
                           style: const TextStyle(
                             fontSize: 25,
                             fontWeight: FontWeight.w500,
